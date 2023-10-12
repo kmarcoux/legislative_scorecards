@@ -69,28 +69,27 @@ assembly_scores <- ny_06_text[14] %>%           ## Selected the page you want to
                          ))
 
 ## Now you can make the legislation table very easily!
-assembly_legislation <- assembly_scores %>%                            ## distinct() takes the unqiue observations of the selected variables
+assembly_legislation <- assembly_scores %>%                            ## distinct() takes the unique observations of the selected variables
   distinct(state, senate, bill, tags)
   
 
 # ################### Example using pdf_data ###################
-# 
-# ny_06_data <- pdf_data("Data/raw/New York/votersguide_2006.pdf")
-# 
-# senate_scores <- ny_06_data[[20]] %>% 
-#   mutate(group = cumsum(na.fill(!lag(space), 0))) %>% 
-#   group_by(group) %>% 
-#   summarise(text = paste0(text, collapse = " "),
-#             x = last(x), 
-#             y = first(y)) %>% 
-#   ungroup %>% 
-#   filter(
-#     y>=max(if_else(grepl("James Alesi", text), y, 0)),
-#     y<max(if_else(grepl("KEY", text), y, 0))
-#          ) %>% 
-#   pivot_wider(id_cols = "y", 
-#               values_from = "text", 
-#               names_from = "x")
-# 
+## Read the PDF in using pdf_data()
+wy_05_data <- pdf_data("Data/raw/Wyoming/WCV Scorecard05 Online Version.pdf")
 
+## Now select the right page and do some manipulation
+wy_assembley_scores <- wy_05_data[[12]] %>%               
+  mutate(y = round(y/10)) %>%                                 ## We round because other wise the rows arent grouped together correctly - they are too precise 
+  filter(y>=max(if_else(grepl("Alden", text), y, 0))) %>%     ## Filter to the start row that you want
+  mutate(group = cumsum(na.fill(!lag(space), 0))) %>%         ## Find where the string is followed by a space, group those observations together so we get the text how it is supposed to show up
+  group_by(group) %>%                                         
+  summarise(text = paste0(text, collapse = " "),              ## Now paste together the text that is followed by a space so the two (or more) words are in the same observation
+            x = round(first(x)/10),                           ## Round you x's like you did with the y's (if the text is left-aligned choose first(x), if it is centered aligned, choose mean(x), if it is right-aligned, choose last (x))
+            y = first(y)) %>%                                 ## Play around with what function of y to use
+  arrange(x, y) %>%                                           ## Sort your data by x, y so that it shows up in a readable fashion when you pivot
+  pivot_wider(id_cols = "y",                                  ## Pivot the data wider, the y values will tell you what should be in the same row together
+              values_from = "text",                           ## The values of the table will come from the text column
+              names_from = "x")                               ## The columns of the table will come from the x column
+              
 
+              
