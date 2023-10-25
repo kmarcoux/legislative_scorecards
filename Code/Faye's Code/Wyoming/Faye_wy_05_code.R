@@ -132,7 +132,7 @@ wy_05_legislation <- wy_house_vote %>%
 assembly_scores_16 <- wy_text[16] %>%           
   substr(.,                                
          str_locate(., "16 Aullman — R, Thayne"),    
-         tail(unlist(gregexpr('\\+',.)), n=1)) %>%       
+         tail(unlist(gregexpr('\\+',.)), n=1)) %>%     ####find last word str_locate_all(wy_text[16], '\\+')[[1]][***]  
   str_replace_all(" {2,26}", "\\|") %>%
   str_replace_all("\\\n\n", "\\\n") %>%   
   str_replace_all("(?<=\\d) ", "\\|") %>%      
