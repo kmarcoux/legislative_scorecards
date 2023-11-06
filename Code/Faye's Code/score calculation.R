@@ -4,12 +4,19 @@ count_bills_with_tag <- function(data_frame, specific_tag) {
   count <- sum(sapply(strsplit(data_frame$tags, ",\\s*"), function(x) specific_tag %in% x))
   return(count)
 }
+
 each_Lname_each_tag<-function(data_frame, name, vote_sign, tag) {
   person_data <- data_frame[data_frame$Lname == name,]
   total_bills_tag<-count_bills_with_tag(person_data, tag)
   person_vote <- person_data[person_data$vote == vote_sign,]
-  person_vote_bills_tag <-count_bills_with_tag(person_vote, tag)
-  return (person_vote_bills_tag /total_bills_tag)
+  ##people who did not vote (to avoid type list error in count_bills_with_tag function)
+  if (nrow(person_vote)==0){
+    return(0)
+  }
+  else {
+    person_vote_bills_tag <-count_bills_with_tag(person_vote, tag)
+    return (person_vote_bills_tag /total_bills_tag)
+  }
 }
 #######calculate the ratio and transfer to score#######
 calculate_and_return_tag_ratios <- function(data_frame, vote_sign) {
@@ -18,21 +25,47 @@ calculate_and_return_tag_ratios <- function(data_frame, vote_sign) {
   
   # Create an empty data frame to store the results
   result_df <- data.frame(Lname = unique(data_frame$Lname))
-  for (tag in unique_tags) {
-    # Calculate the ratios for each person and the tag
-    total_bills_tag<-count_bills_with_tag(data_frame, tag)
-    tag_ratios <- sapply(result_df$Lname, function(Lname) {
-      return (each_Lname_each_tag(data_frame,name=Lname, vote_sign, tag))
+  
+  #each tag score
+  result_df[unique_tags] <- lapply(unique_tags, function(tag) {
+    sapply(result_df$Lname, function(Lname) {
+      each_Lname_each_tag(data_frame, Lname, vote_sign, tag) * 100
     })
-    
-    # Add a column for the current tag
-    result_df[tag] <- tag_ratios*100 
-  }
+  })
   
   return(result_df)
 }
 
+#Round final score to 2 decimal points:
+# calculate_tag_ratios <- function(data_frame, vote_sign) {
+#   unique_tags <- unique(unlist(strsplit(data_frame$tags, ",\\s*")))
+#   
+#   result_df <- data.frame(Lname = unique(data_frame$Lname))
+#   
+#   result_df[unique_tags] <- lapply(unique_tags, function(tag) {
+#     sapply(result_df$Lname, function(Lname) {
+#       round(each_Lname_each_tag(data_frame, Lname, vote_sign, tag) * 100, 2)
+#     })
+#   })
+#   
+#   return(result_df)
+# }
 
+#seperate house/senate
+tag_score_house_senate <-function(data_frame, vote_sign) {
+  house_rep_score <-calculate_tag_ratios(data_frame[data_frame$senate==0, ], vote_sign)
+  senator_score <-calculate_tag_ratios(data_frame[data_frame$senate==1, ], vote_sign)
+  return(bind_rows(house_rep_score, senator_score))
+}
+#if there are same names in senate and house:
+# tag_score_house_senate <-function(data_frame, vote_sign) {
+#   house_rep_score <-calculate_tag_ratios(data_frame[data_frame$senate==0, ], vote_sign) %>% 
+#     mutate(senate=0)
+#   senator_score <-calculate_tag_ratios(data_frame[data_frame$senate==1, ], vote_sign) %>% 
+#     mutate(senate=1)
+#   return(bind_rows(house_rep_score, senator_score))
+# }
+# wy_06_score<-wy_06_info %>% right_join(wy_06_tag_score, by=c('senate','Lname'))
 
 # Sample data frame refer to faye's wy_05_code
 df <- wy_05_votes[1:31,]

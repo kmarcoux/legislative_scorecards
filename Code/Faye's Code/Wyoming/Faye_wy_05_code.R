@@ -220,7 +220,7 @@ each_Lname_each_tag<-function(data_frame, name, vote_sign, tag) {
   return (person_vote_bills_tag /total_bills_tag)
 }
 #######calculate the ratio and transfer to score
-calculat_tag_ratios <- function(data_frame, vote_sign) {
+calculate_tag_ratios <- function(data_frame, vote_sign) {
   # Get unique tags
   unique_tags <- unique(unlist(strsplit(data_frame$tags, ",\\s*")))
   
@@ -242,9 +242,9 @@ calculat_tag_ratios <- function(data_frame, vote_sign) {
 
 ######do house and senate seperately and rbind together
 tag_score_house_senate <-function(data_frame, vote_sign) {
-  house_rep_score <-calculat_tag_ratios(data_frame[data_frame$senate==0, ], vote_sign)
-  senator_score <-calculat_tag_ratios(data_frame[data_frame$senate==1, ], vote_sign)
-  return(rbind.fill(house_rep_score, senator_score))
+  house_rep_score <-calculate_tag_ratios(data_frame[data_frame$senate==0, ], vote_sign)
+  senator_score <-calculate_tag_ratios(data_frame[data_frame$senate==1, ], vote_sign)
+  return(bind_rows(house_rep_score, senator_score))
 }
 
 
@@ -252,15 +252,15 @@ tag_score_house_senate <-function(data_frame, vote_sign) {
 #############################Analysis###############################
 wy_05_votes <- rbind(wy_house_vote,wy_senate_vote )
 wy_05_legislation<-wy_05_votes %>% distinct(state, senate, bill, tags)
-wy_05_score<-rbind(assembly_vote_1 %>% 
-                     select(state, senate, party, district_name, district, 
-                            Lname, Score_05, Ave_Score_02to04),
-                    assembly_vote_2 %>% 
-                     select(state, senate, party, district_name, district, 
-                            Lname, Score_05, Ave_Score_02to04),
-                    assembly_vote_3 %>% 
-                     select(state, senate, party, district_name,district, 
-                           Lname, Score_05, Ave_Score_02to04))
+# wy_05_score<-rbind(assembly_vote_1 %>% 
+#                      select(state, senate, party, district_name, district, 
+#                             Lname, Score_05, Ave_Score_02to04),
+#                     assembly_vote_2 %>% 
+#                      select(state, senate, party, district_name, district, 
+#                             Lname, Score_05, Ave_Score_02to04),
+#                     assembly_vote_3 %>% 
+#                      select(state, senate, party, district_name,district, 
+#                            Lname, Score_05, Ave_Score_02to04))
 wy_05_tag_score<-wy_05_votes %>% tag_score_house_senate(., vote_sign="+")
   
   
