@@ -36,6 +36,25 @@ calculate_and_return_tag_ratios <- function(data_frame, vote_sign) {
   return(result_df)
 }
 
+
+##calculate the ratio and transfer to score
+calculate_and_return_tag_ratios <- function(data_frame, vote_sign) {
+  # Get unique tags
+  unique_tags <- unique(unlist(strsplit(data_frame$tags, ",\\s*")))
+  
+  # Create an empty data frame to store the results
+  result_df <- unique(data_frame[c(1,2,3,4)])        ####senete, name, score, district (should change based on different dataframe)
+  
+  #each tag score
+  result_df[unique_tags] <- lapply(unique_tags, function(tag) {
+    sapply(result_df$name, function(name) {
+      each_Lname_each_tag(data_frame, name, vote_sign, tag) * 100
+    })
+  })
+  
+  return(result_df)
+}
+
 #Round final score to 2 decimal points:
 # calculate_tag_ratios <- function(data_frame, vote_sign) {
 #   unique_tags <- unique(unlist(strsplit(data_frame$tags, ",\\s*")))

@@ -12,7 +12,7 @@ setwd("~/Library/CloudStorage/Box-Box/Legislative Scorecards")
 ## READ IN DATA AND MERGE
 ################################################################################
 
-################### Example using pdf_text ###################
+############################ Example using pdf_text ############################
 
 ny_06_text <- pdf_text("Data/raw/New York/votersguide_2006.pdf")
 
@@ -74,7 +74,7 @@ assembly_legislation <- assembly_scores %>%                            ## distin
 
 
 
-### Example for Arizona 07 
+######################### Example for Arizona 07 ###############################
 az07_text <- pdf_text("Data/raw/Arizona/azlcv_scorecard_2007.pdf")
 
 ## Scrape the names and final scores from page 14
@@ -117,9 +117,65 @@ az_house_final_table <- tibble(name = c("weight", "position")) %>%
   bind_cols(az_house_scores)
 
 
-  
+########### Example for Wisconsin 06 - Using a user created function ###########
+wi06_text <- pdf_text("Data/raw/Wisconsin/WLCV-Scorecard-2006.pdf")
 
-# ################### Example using pdf_data ###################
+basic_text_scrape_fun <- function(page, start_text, end_text, end_diff){      ## We can define our own function to speed things up
+  
+  page %>% 
+    substr(str_locate(., start_text), str_locate(., end_text)-end_diff) %>%     ## Subset to the right rows
+    str_replace_all(" {2,}", "\\|") %>%                                       ## Replace double spaces with pipes
+    str_replace_all("\\\n\\|", "\\\n") %>%                                    ## replace pipes after line breaks with just line breaks
+    str_replace_all("District Score", "District \\| Score") %>%               ## This line helps with a small problem in the senate table
+    str_replace_all("compromise AB", "compromise \\| AB") %>%               ## This line helps with a small problem in the senate table
+    read_delim(delim = "|")
+  
+}
+
+## Scrape the names and final scores for Wisconsin Assembly
+wi_assembly_scores <- basic_text_scrape_fun(wi06_text[8],                    ## Use our function to scrape page 8
+                                            "Representative", 
+                                            "Excused", 
+                                            5) %>% 
+  bind_cols(                                                                 ## Page 9 has the rest of the columns for the representatives on page 8 - we want to bind on these columns using bind_cols() 
+    basic_text_scrape_fun(wi06_text[9],                                      ## Use our function to scrape page 9
+                          "AB 441", 
+                          "Conservation", 
+                          1)
+    ) %>% 
+  bind_rows(                                                                ## Pages 10 and 11 have the rows for the rest of the representatives - we want to bind on these rows using bind_rows() 
+    bind_cols(                                                              ## Pages 10 and 11 have all the columns for the representatives on page 10 - we want to bind these columns together using bind_cols() 
+      basic_text_scrape_fun(wi06_text[10],                                  ## Use our function to scrape page 10
+                            "Representative", 
+                            "Excused", 
+                            5),
+      basic_text_scrape_fun(wi06_text[11],                                  ## Use our function to scrape page 11
+                            "AB 441", 
+                            "Conservation", 
+                            1)
+    )
+  ) %>% 
+  filter(!is.na(`AB 437`))%>%                                                   ## Drop rows that have NAs
+  rename(name = Representative) %>% 
+  janitor::clean_names()
+
+
+#### Now we can use that same function to scrape the senate tables:
+wi_senate_scores <- basic_text_scrape_fun(wi06_text[12], "Senator", "JOINT", 1) %>% 
+  bind_cols(
+    basic_text_scrape_fun(wi06_text[13], "AB 299", "JOINT", 1)
+  ) %>% 
+  filter(!is.na(`SB 459`)) %>% 
+  janitor::clean_names() %>% 
+  rename(name = senator)
+
+wi_all_scores <- bind_rows(
+  wi_assembly_scores,
+  wi_senate_scores
+)
+
+
+########################### Example using pdf_data #############################
 ## Read the PDF in using pdf_data()
 wy_05_data <- pdf_data("Data/raw/Wyoming/WCV Scorecard05 Online Version.pdf")
 
