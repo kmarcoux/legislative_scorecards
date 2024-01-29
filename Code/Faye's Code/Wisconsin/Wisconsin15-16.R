@@ -7,15 +7,15 @@ library(janitor)
 
 ####load data
 setwd("~/Library/CloudStorage/Box-Box/Legislative Scorecards")
-wi_senate <- read.csv("Data/clean/Wisconsin 2013-2014 Senate.csv")
-wi_senate<-wi_senate[,1:11] %>%  row_to_names(row_number = 1) %>% 
+wi_senate <- read.csv("Data/clean/Wisconsin 2015-2016 Senate.csv") %>% 
+  row_to_names(row_number = 1) %>% 
   clean_names() %>% 
-  rename(`2014_score` = x2014) %>% 
+  rename(`2016_score` = x2016, senate=sanator) %>% 
   filter(senate != "")
-wi_house<-read.csv("Data/clean/Wisconsin 2013-2014 House.csv")
-wi_house<-wi_house[,1:12] %>% row_to_names(row_number = 1) %>% 
+
+wi_house<-read.csv("Data/clean/Wisconsin 2015-2016 House.csv") %>% 
   clean_names() %>% 
-  rename(`2014_score` = x2014, name=representative)%>% 
+  rename(`2016_score` = x2016)%>% 
   filter(senate != "")
 
 
@@ -59,36 +59,46 @@ calculate_and_return_tag_ratios <- function(data_frame, vote_sign) {
 
 
 wi_senate_score<-wi_senate %>% 
-  pivot_longer(cols = names(wi_senate)[-c(1,2,3,10, 11)],
+  pivot_longer(cols = names(wi_senate)[-c(1,2,3,13, 14)],
                names_to = "bill",
                values_to = "vote") %>%
   mutate(
-    tags = case_when(bill=="ab_173"~"other, conservation",
-                     bill=="sb_1"~"human_health, water, mining, natural_resource, toxin",
-                     bill=="sb_183"~"water, lake",
-                     bill=="sb_190"~"water, pollution",
-                     bill=="sb_259"~"transportation",
-                     bill=="sb_278"~"land, mining"
+    tags = case_when(bill=="ab_582"~"pollution, industry, human_health, other",
+                     bill=="sb_239"~"groundwater",
+                     bill=="sb_459"~"water, natural resource, wetland, wildlife",
+                     bill=="ab_384"~"energy, nuclear energy",
+                     bill=="ab_603"~"shoreland, water",
+                     bill=="sb_434"~"forest, wildlife",
+                     bill=="ab_25"~"air, pollution, human_health",
+                     bill=="ab_515"~"recycle, waste, education, other",
+                     bill=="ab_563"~"pollution, wildlife, land, other"
     ))  %>% 
   calculate_and_return_tag_ratios(., 1)
 
 
 wi_house_score<-wi_house %>% 
-  pivot_longer(cols = names(wi_house)[-c(1,2,3,11, 12)],
+  pivot_longer(cols = names(wi_house)[-c(1,2,3,13, 14)],
                names_to = "bill",
                values_to = "vote") %>%
   mutate(
-    tags = case_when(bill=="ab_173"~"other, conservation",
-                     bill=="ab_448"~"wetland, wildlife",
-                     bill=="sb_1"~"human_health, water, mining, natural_resource, toxin",
-                     bill=="sb_183"~"water, lake",
-                     bill=="sb_190"~"water, pollution",
-                     bill=="sb_278"~"land, mining",
-                     bill=="sb_596"~"water, other"
+    tags = case_when(bill=="ab_582"~"pollution, industry, human_health, other",
+                     bill=="ab_874"~"groundwater",
+                     bill=="sb_459"~"water, natural resource, wetland, wildlife",
+                     bill=="ab_603"~"shoreland, water",
+                     bill=="ab_640"~"water, agriculture, wildlife, aquaculture",
+                     bill=="sb_434"~"forest, wildlife",
+                     bill=="ab_25"~"air, pollution, human_health",
+                     bill=="ab_515"~"recycle, waste, education, other",
+                     bill=="ab_563"~"pollution, wildlife, land, other"
     )) %>% 
   calculate_and_return_tag_ratios(., 1)
 
-wi_13_14_score <- wi_house_score %>% bind_rows(wi_senate_score)
+wi_senate_score$district <- as.integer(wi_senate_score$district)
+wi_senate_score$senate <- as.integer(wi_senate_score$senate)
+wi_house_score$district <- as.integer(wi_house_score$district)
+wi_house_score$senate <- as.integer(wi_house_score$senate)
+
+wi_15_16_score <- wi_house_score %>% bind_rows(wi_senate_score)
 
 
 

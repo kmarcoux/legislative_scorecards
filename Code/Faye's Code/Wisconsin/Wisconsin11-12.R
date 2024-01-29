@@ -64,7 +64,7 @@ wi_assembly_scores <- basic_text_scrape_fun(wi_text[10],                    ## U
                                             "Representative", 
                                             "Legislator", 
                                             4) %>% 
-  rename(ss_ss_1=Science, ss_sb_10=Wetlands, ss_ab_8=`Public Health`, 
+  rename(ss_sb_1=Science, ss_sb_10=Wetlands, ss_ab_8=`Public Health`, 
          sb_75=Wildlife, sb_81=`Clean Energy`, sb_326=Water) %>% 
   bind_cols(                                                                ## Page 9 has the rest of the columns for the representatives on page 8 - we want to bind on these columns using bind_cols() 
     basic_text_scrape_fun(wi_text[11],                                      ## Use our function to scrape page 9
@@ -79,7 +79,7 @@ wi_assembly_scores <- basic_text_scrape_fun(wi_text[10],                    ## U
                             "Representative", 
                             "Legislator", 
                             4) %>% 
-        rename(ss_ss_1=Science, ss_sb_10=Wetlands, ss_ab_8=`Public Health`, 
+        rename(ss_sb_1=Science, ss_sb_10=Wetlands, ss_ab_8=`Public Health`, 
                sb_75=Wildlife, sb_81=`Clean Energy`, sb_326=Water),
       basic_text_scrape_fun(wi_text[13],                                  ## Use our function to scrape page 11
                             "Representative", 
